@@ -1,3 +1,6 @@
 [submodule "Backend"]
 	path = Backend
 	url = https://github.com/lucassantos319/PFS.Core.git
+[submodule "Frontend"]
+	path = Frontend
+	url = https://github.com/lucassantos319/wallet-whiz-platform.git
