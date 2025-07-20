@@ -1,0 +1,54 @@
+version: '3.8'  # pode remover se quiser, conforme aviso do Compose
+
+services:
+  PFS-DB-CORE:
+    image: postgres:15
+    container_name: PFS-DB-CORE 
+    environment: 
+      POSTGRES_USER: pfsuser
+      POSTGRES_PASSWORD: pfspassword
+      POSTGRES_DB: PFS-DB-CORE
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./DB/data/core/db-core:/var/lib/postgresql/data
+      - ./DB/dump-core-PFS-CORE-202507191228.sql:/docker-entrypoint-initdb.d/init-schema.sql
+    restart: unless-stopped
+
+  PFS-DB-MG:
+    image: postgres:15
+    container_name: PFS-DB-MG
+    environment: 
+      POSTGRES_USER: pfsuser2
+      POSTGRES_PASSWORD: pfspassword2
+      POSTGRES_DB: PFS-DB-MG
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./DB/data/mg/db-mg:/var/lib/postgresql/data
+      - ./DB/dump-mg-PFS-MG-202507191228.sql:/docker-entrypoint-initdb.d/init-schema.sql
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - api
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./backend/net8.0
+      dockerfile: API/Dockerfile
+    ports:
+      - "3190:3190"
+    depends_on:
+      - PFS-DB-CORE
+      - PFS-DB-MG
+    environment:
+      ASPNETCORE_URLS: http://+:3190
+      ConnectionStringCore: Host=PFS-DB-CORE;Port=5432;Database=PFS-DB-CORE;Username=pfsuser;Password=pfspassword
+      ConnectionStringMG: Host=PFS-DB-MG;Port=5432;Database=PFS-DB-MG;Username=pfsuser2;Password=pfspassword2
+    restart: unless-stopped
